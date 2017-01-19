@@ -6,13 +6,12 @@ categories: Database
 tags: Database Deadlock
 ---
 
-* content
-{:toc}
+
 
 When query something not indexed with lock mode, the performance is not scaled. This is a bad query.
-
 for example:
-```
+
+```python
 session.query(People).filter(_name='Toby').with_lockmode('update').all()
 ```
 
@@ -21,7 +20,8 @@ We should split the query with two parts.
 2. query by the result of 1) which is indexed with lock mode.
 
 for example:
-```
+
+```python
 pids = session.query(People._id).filter(_name='Toby').all()
 for id in pids:
     session.query(People).filter(_id=id).with_lockmode('update').first()
