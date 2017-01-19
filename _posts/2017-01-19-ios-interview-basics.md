@@ -16,17 +16,17 @@ tags: iOS Interview
 ... avoid retain cycle
 
 3. UI update in main queue. What should we do if we need to handle some event and update UI and it takes a long time?
-...
-```
-dispatch_async(        
-  dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0),
-    ^{
-      sleep(10);
-      dispatch_async(dispatch_get_main_queue(), ^{
-         self.alert.text = @"Waiting over";
-      });
-});
-```
+
+  ```
+  dispatch_async(        
+    dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0),
+      ^{
+        sleep(10);
+        dispatch_async(dispatch_get_main_queue(), ^{
+           self.alert.text = @"Waiting over";
+        });
+  });
+  ```
 
 4. What considerations do you need when writing a UITableViewController which shows images downloaded from a remote server?
 ..1)Only download the image when the cell is scrolled into view, i.e. when cellForRowAtIndexPath is called.
