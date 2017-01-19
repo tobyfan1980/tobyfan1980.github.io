@@ -2,8 +2,8 @@
 layout: post
 title:  "Working on Github branches"
 date:   2017-01-19 10:00:00 +0200
-categories:    tools
-tags:    github
+categories:    Tools
+tags:    Github
 ---
 
 1 -- Working on new branch
