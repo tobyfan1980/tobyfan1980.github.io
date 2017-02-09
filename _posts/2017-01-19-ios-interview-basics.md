@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "iOS Interview Basic Questions"
-date:   2019-01-19 15:14:54
+date:   2017-01-19 15:14:54
 categories: iOS
 tags: iOS Interview
 ---
