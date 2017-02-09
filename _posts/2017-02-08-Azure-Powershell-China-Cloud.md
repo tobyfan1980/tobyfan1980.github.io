@@ -32,7 +32,10 @@ ApiVersions      : {2016-01-29}
 
 3 -- If we want to call Azure REST API from our application, this application must be registered to Azure, and use its application ID
 to get access token. 
+
+
 3.1) create application
+
 ```
 PS C:\> $app = New-AzureRmADApplication -DisplayName "intelab" -HomePage "http://intelab.ilabservice.com" -IdentifierUris "http://intelab.ilabservice.com" -Password "xxxxx-2017"
 PS C:\> $app
@@ -95,6 +98,7 @@ access_token   : eyJ0eXAiOiJKV1QiL........
 ```
 
 3.5) using this token, we can query azure resources as we need. The following example get the PowerBI workspacecollections in a subscription.
+
 ```
 $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
 $headers.Add("Bearer", '{access_token}')
