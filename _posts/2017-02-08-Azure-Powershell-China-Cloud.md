@@ -78,7 +78,7 @@ TenantId         : ce5605b8-xxxx-xxxx-bd33-19822c98f924
 State            : Enabled
 ```
 
-3.4) generate accesstoken using http requst
+3.4) generate accesstoken using http requst. Be careful, in body, the "resource" link has to have the backslash at the end.
 
 ```
 PS C:\> Invoke-RestMethod -Uri https://login.chinacloudapi.cn/{tenentId}/oauth2/token?api-version=1.0 
@@ -94,3 +94,10 @@ resource       : https://management.core.chinacloudapi.cn/
 access_token   : eyJ0eXAiOiJKV1QiL........
 ```
 
+3.5) using this token, we can query azure resources as we need. The following example get the PowerBI workspacecollections in a subscription.
+```
+$headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
+$headers.Add("Bearer", '{access_token}')
+
+Invoke-RestMethod -Uri https://management.chinacloudapi.cn/subscriptions/{subscription_id}/resourceGroups/{resource group name}/providers/Microsoft.PowerBI/workspacecollections?api-version=2016-01-29 -Method Get -Headers $headers
+```
