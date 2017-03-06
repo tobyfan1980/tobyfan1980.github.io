@@ -143,7 +143,7 @@ When we start a virtual machine, we can specify its cpu model in its libvirt dom
   <model fallback='forbid'>Westmere</model>
   <vendor>Intel</vendor>
   <topology sockets='1' cores='2' threads='1'/>
-  <feature policy='required' name='acpi'/>
+  <feature policy='require' name='acpi'/>
 </cpu>
 ```
 
