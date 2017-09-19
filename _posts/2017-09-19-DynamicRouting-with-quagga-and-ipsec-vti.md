@@ -104,7 +104,7 @@ however, the VTI interface by default has multicast disabled. As a result, a rou
 So, we need to enable multicast on the VTI interface. 
  
 ```
-infonfic vti02 multicast
+ifonfig vti02 multicast
 ```
 
 Then, using tcpdump on port 520, we can see the multicast packets like
