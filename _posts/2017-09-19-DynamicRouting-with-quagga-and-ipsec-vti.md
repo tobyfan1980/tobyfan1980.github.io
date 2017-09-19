@@ -55,6 +55,7 @@ The tag 'mark' refers to the ip route table for the vti traffic, if you have tha
 ### For routing, quagga is used
  
 Quagga is a routing software suite implementing many routing protocols including OSPF, RIP, BGP, etc. 
+Now a better suit FRRouting is replacing quagga, and soon Ubuntu should have it in its repository. 
 In this example, we use RIP. So we edit /etc/quagga/daemons as below
 
 ```
