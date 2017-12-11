@@ -1,7 +1,7 @@
 ---
 layout: post
-title:  "Singleton not good for Unit test in python"
-date:   2017-09-19 11:00:00 -0800
+title:  "Singleton Not Good for Unit test in Python"
+date:   2017-12-11 12:00:00 -0800
 categories:    Programming
 tags:    Python
 ---
