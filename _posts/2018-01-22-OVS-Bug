@@ -1,0 +1,118 @@
+---
+layout: post
+title:  "An interesting bug in OVS"
+date:   2018-01-22 12:00:00 -0800
+categories:    Programming
+tags:    Python
+---
+
+I observed that in some program, when using python library subprocess.Open() to run an ovs-ofctl shell command, it throws the following error.
+But when directly run the same command in shell, there is no such issue.
+
+```
+ ovs-ofctl: ovs|00001|util|EMER|../lib/poll-loop.c:111: assertion !fd != !wevent failed in poll_create_node()
+```
+
+I took a look at the source code. 
+
+```
+static void
+poll_create_node(int fd, HANDLE wevent, short int events, const char *where)
+{
+    struct poll_loop *loop = poll_loop();
+    struct poll_node *node;
+
+    COVERAGE_INC(poll_create_node);
+
+    /* Both 'fd' and 'wevent' cannot be set. */
+    ovs_assert(!fd != !wevent);
+
+    /* Check for duplicate.  If found, "or" the events. */
+    node = find_poll_node(loop, fd, wevent);
+    if (node) {
+        node->pollfd.events |= events;
+    } else {
+        node = xzalloc(sizeof *node);
+        hmap_insert(&loop->poll_nodes, &node->hmap_node,
+                    hash_2words(fd, (uint32_t)wevent));
+        node->pollfd.fd = fd;
+        node->pollfd.events = events;
+#ifdef _WIN32
+        if (!wevent) {
+            wevent = CreateEvent(NULL, FALSE, FALSE, NULL);
+        }
+#endif
+        node->wevent = wevent;
+        node->where = where;
+    }
+}
+```
+
+In linux, wevent always has value 0, so it means the file descriptor used in this call is 0 which is not allowed. 
+
+Go deeper. This function is called in another function poll_fd_wait_at() which is called in another file latch-unix.c.
+
+```
+/* Causes the next poll_block() to wake up when 'latch' is set.
+ *
+ * ('where' is used in debug logging.  Commonly one would use latch_wait() to
+ * automatically provide the caller's source file and line number for
+ * 'where'.) */
+void
+latch_wait_at(const struct latch *latch, const char *where)
+{
+    poll_fd_wait_at(latch->fds[0], POLLIN, where);
+}
+```
+The concept of latch is first in microprocessors, a flip-flop that can be used to remember digital data.  Here a latch is a data struct defined as
+```
+struct latch {
+#ifndef _WIN32
+    int fds[2];
+#else
+    HANDLE wevent;
+    bool is_set;
+#endif
+};
+```
+In linux, it keeps two file descriptors (input and output). 
+
+The latch object is stored in a seq_thread structure. 
+
+```
+/* A thread that might be waiting on one or more seqs. */
+struct seq_thread {
+    struct ovs_list waiters OVS_GUARDED; /* Contains 'struct seq_waiter's. */
+    struct latch latch OVS_GUARDED;  /* Wakeup latch for this thread. */
+    bool waiting OVS_GUARDED;        /* True if latch_wait() already called. */
+};
+```
+ 
+ And the following function is used to get the thread associated with the sequence number. 
+ 
+ ```
+ static struct seq_thread *
+seq_thread_get(void)
+    OVS_REQUIRES(seq_mutex)
+{
+    struct seq_thread *thread = pthread_getspecific(seq_thread_key);
+    if (!thread) {
+        thread = xmalloc(sizeof *thread);
+        ovs_list_init(&thread->waiters);
+        latch_init(&thread->latch);
+        thread->waiting = false;
+
+        xpthread_setspecific(seq_thread_key, thread);
+    }
+    return thread;
+}
+```
+
+Thus, the problem is that the used thread has latch with fd[0]=0
+
+The most interesting observation is that when we call subprocess.Open(), if we set stdin=PIPE, we don't get the above error, when means if we purposely
+reserve the fd 0, there is no chance that the thread in OVS can have fd=0. 
+
+So, the conclusion is that there is a bug somewhere in ovs (probably in ovs-ofctl), they incorrectly allocate fd=0 to the thread pool. 
+
+
